@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
-use Illuminate\Http\Request;
-use App\Http\Requests\StoreProjectRequest;
-use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Requests\ProjectRequest;
 use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
@@ -16,7 +14,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::all();
+        $projects = Project::with('category')->get();
         return view('admin.projects.index', compact('projects'));
     }
 
@@ -31,23 +29,18 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProjectRequest $request)
+    public function store(ProjectRequest $request)
     {
         $data = $request->validated();
 
-        // Gestione dell'upload dell'immagine
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('projects', 'public');
         }
 
-        // Gestione delle technologies come JSON
-        if (isset($data['technologies'])) {
-            $data['technologies'] = json_encode(array_map('trim', explode(',', $data['technologies'])));
-        }
-
         $project = Project::create($data);
 
-        return redirect()->route('admin.projects.show', $project->id)
+        return redirect()
+            ->route('admin.projects.show', $project)
             ->with('success', 'Project created successfully');
     }
 
@@ -56,6 +49,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+        $project->load('category');
         return view('admin.projects.show', compact('project'));
     }
 
@@ -70,27 +64,21 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateProjectRequest $request, Project $project)
+    public function update(ProjectRequest $request, Project $project)
     {
         $data = $request->validated();
 
-        // Gestione dell'upload dell'immagine
         if ($request->hasFile('image')) {
-            // Elimina la vecchia immagine se esiste
             if ($project->image_path) {
                 Storage::disk('public')->delete($project->image_path);
             }
             $data['image_path'] = $request->file('image')->store('projects', 'public');
         }
 
-        // Gestione delle technologies come JSON
-        if (isset($data['technologies'])) {
-            $data['technologies'] = json_encode(array_map('trim', explode(',', $data['technologies'])));
-        }
-
         $project->update($data);
 
-        return redirect()->route('admin.projects.show', $project->id)
+        return redirect()
+            ->route('admin.projects.show', $project)
             ->with('success', 'Project updated successfully');
     }
 
@@ -99,9 +87,14 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        if ($project->image_path) {
+            Storage::disk('public')->delete($project->image_path);
+        }
+
         $project->delete();
 
-        return redirect()->route('admin.projects.index')
+        return redirect()
+            ->route('admin.projects.index')
             ->with('success', 'Project deleted successfully');
     }
 }

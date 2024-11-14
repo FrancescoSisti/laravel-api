@@ -6,43 +6,42 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->string('title');
-            $table->text('description');
-            $table->string('url')->nullable();
-            $table->string('image_path')->nullable();
-            $table->string('github_url')->nullable();
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->string('status')->default('draft');
-            $table->string('category')->nullable();
-            $table->json('technologies')->nullable();
-        });
+        // First, create the projects table if it doesn't exist
+        if (!Schema::hasTable('projects')) {
+            Schema::create('projects', function (Blueprint $table) {
+                $table->id();
+                $table->string('title');
+                $table->text('description');
+                $table->string('image_path')->nullable();
+                $table->foreignId('category_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+            });
+        } else {
+            // If the table exists, add the columns
+            Schema::table('projects', function (Blueprint $table) {
+                if (!Schema::hasColumn('projects', 'title')) {
+                    $table->string('title');
+                }
+                if (!Schema::hasColumn('projects', 'description')) {
+                    $table->text('description');
+                }
+                if (!Schema::hasColumn('projects', 'image_path')) {
+                    $table->string('image_path')->nullable();
+                }
+                if (!Schema::hasColumn('projects', 'category_id')) {
+                    $table->foreignId('category_id')->constrained()->onDelete('cascade');
+                }
+                if (!Schema::hasColumn('projects', 'created_at')) {
+                    $table->timestamps();
+                }
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->dropColumn([
-                'title',
-                'description',
-                'url',
-                'image_path',
-                'github_url',
-                'start_date',
-                'end_date',
-                'status',
-                'category',
-                'technologies'
-            ]);
-        });
+        Schema::dropIfExists('projects');
     }
 };

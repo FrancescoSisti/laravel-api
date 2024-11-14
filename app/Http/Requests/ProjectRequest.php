@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateProjectRequest extends FormRequest
+class ProjectRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,7 +17,7 @@ class UpdateProjectRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'required|exists:categories,id'
+            'category_id' => 'required|exists:categories,id',
         ];
     }
 
@@ -31,7 +31,8 @@ class UpdateProjectRequest extends FormRequest
             'image.mimes' => 'The image must be a file of type: jpeg, png, jpg, gif',
             'image.max' => 'The image may not be greater than 2MB',
             'category_id.required' => 'The category is required',
-            'category_id.exists' => 'The selected category is invalid'
+            'category_id.exists' => 'The selected category is invalid',
         ];
     }
 }
+

@@ -12,15 +12,10 @@ class Project extends Model
     protected $fillable = [
         'title',
         'description',
-        'url',
         'image_path',
-        'github_url',
-        'start_date',
-        'end_date',
-        'status',
         'category_id',
-        'technologies'
     ];
+
 
     public function category()
     {
